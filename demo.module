@@ -22,6 +22,15 @@ function demo_entity_info() {
       'path' => 'admin/projects',
       'controller class' => 'EntityDefaultUIController',
     ),
+    'fieldable' => TRUE,
+    'bundles' => array(
+      'project' => array(
+        'label' => t('Project'),
+        'admin' => array(
+          'path' => 'admin/projects',
+        ),
+      ),
+    ),
     'module' => 'demo',
   );
   
@@ -131,6 +140,8 @@ function project_form($form, &$form_state, $project = NULL) {
     '#default_value' => isset($project->deadline) ? $project->deadline : '',
     '#required' => TRUE,
   );  
+  
+  field_attach_form('project', $project, $form, $form_state);
   
   $form['submit'] = array(
     '#type' => 'submit', 
