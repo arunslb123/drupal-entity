@@ -34,6 +34,13 @@ function demo_menu() {
     'access arguments' => array('access content'),
   );
   
+  $items['project/%'] = array(
+    'title' => 'Project',
+    'page callback' => 'demo_view_project',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+  );
+  
   return $items;
 }
 
@@ -65,6 +72,21 @@ function demo_projects() {
   return implode($output);
 
 }
+
+  /**
+   * Callback function for displaying the individual project page
+   */
+  function demo_view_project($id) {
+    
+    $projects = entity_load('project', array($id));
+    $project = $projects[$id];
+    
+    drupal_set_title($project->name);
+    $output = entity_view('project', array($project));
+    
+    return $output;
+    
+  }
 
 /**
    * Extending the EntityAPIController for the Project entity.
