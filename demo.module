@@ -14,8 +14,14 @@ function demo_entity_info() {
       'id' => 'id',
       'label' => 'name',
     ),
-    'entity class' => 'Entity',
+    'entity class' => 'ProjectEntity',
     'controller class' => 'ProjectEntityController',
+    'access callback' => 'demo_access_callback',
+    'uri callback' => 'entity_class_uri',
+    'admin ui' => array(
+      'path' => 'admin/projects',
+      'controller class' => 'EntityDefaultUIController',
+    ),
     'module' => 'demo',
   );
   
@@ -42,6 +48,18 @@ function demo_menu() {
   );
   
   return $items;
+}
+
+/**
+ * Access callback for project entities.
+ */
+function demo_access_callback($op, $project = NULL, $account = NULL) {
+  if ($op == 'view' || $op == 'update' || $op == 'create' || $op == 'delete') {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 /**
@@ -73,46 +91,105 @@ function demo_projects() {
 
 }
 
-  /**
-   * Callback function for displaying the individual project page
-   */
-  function demo_view_project($id) {
-    
-    $projects = entity_load('project', array($id));
-    $project = $projects[$id];
-    
-    drupal_set_title($project->name);
-    $output = entity_view('project', array($project));
-    
-    return $output;
-    
-  }
+/**
+ * Callback function for displaying the individual project page
+ */
+function demo_view_project($id) {
+  
+  $projects = entity_load('project', array($id));
+  $project = $projects[$id];
+  
+  drupal_set_title($project->name);
+  $output = entity_view('project', array($project));
+  
+  return $output;
+  
+}
 
 /**
-   * Extending the EntityAPIController for the Project entity.
-   */
-  class ProjectEntityController extends EntityAPIController {
-    
-    public function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
+ * Form definition for adding / editing a project.
+ */
+function project_form($form, &$form_state, $project = NULL) {
   
-      $build = parent::buildContent($entity, $view_mode, $langcode, $content);
-      
-      // Our additions to the $build render array.
-      $build['description'] = array(
-        '#type' => 'markup',
-        '#markup' => check_plain($entity->description),
-        '#prefix' => '<div class="project-description">',
-        '#suffix' => '</div>',
-      );
-      $build['deadline'] = array(
-        '#type' => 'markup',
-        '#markup' => date('d F, Y', check_plain($entity->deadline)),
-        '#prefix' => '<p>Deadline: ',
-        '#suffix' => '</p>',
-      );
-      
-      return $build;
+  $form['name'] = array(
+    '#title' => t('Project name'),
+    '#type' => 'textfield',
+    '#default_value' => isset($project->name) ? $project->name : '',
+    '#required' => TRUE,
+  );
+
+  $form['description'] = array(
+    '#title' => t('Project description'),
+    '#type' => 'textarea',
+    '#default_value' => isset($project->description) ? $project->description : '',
+    '#required' => TRUE,
+  );
+
+  $form['deadline'] = array(
+    '#title' => t('Project deadline'),
+    '#type' => 'textfield',
+    '#default_value' => isset($project->deadline) ? $project->deadline : '',
+    '#required' => TRUE,
+  );  
+  
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => isset($project->id) ? t('Update project') : t('Save project'),
+    '#weight' => 50,
+  );
+
+  return $form;
+}
+
+/**
+ * Submit handler for the project add/edit form.
+ */
+function project_form_submit($form, &$form_state) {
+  $project = entity_ui_form_submit_build_entity($form, $form_state);
+  $project->save();
+  drupal_set_message(t('The project: @name has been saved.', array('@name' => $project->name)));
+  $form_state['redirect'] = 'admin/projects';
+}
+
+/**
+ * Extending the EntityAPIController for the Project entity.
+ */
+class ProjectEntityController extends EntityAPIController {
+  
+  public function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
+
+    $build = parent::buildContent($entity, $view_mode, $langcode, $content);
     
-    }
+    // Our additions to the $build render array.
+    $build['description'] = array(
+      '#type' => 'markup',
+      '#markup' => check_plain($entity->description),
+      '#prefix' => '<div class="project-description">',
+      '#suffix' => '</div>',
+    );
+    $build['deadline'] = array(
+      '#type' => 'markup',
+      '#markup' => date('d F, Y', check_plain($entity->deadline)),
+      '#prefix' => '<p>Deadline: ',
+      '#suffix' => '</p>',
+    );
     
+    return $build;
+  
   }
+  
+}
+  
+/**
+ * Project entity class extending the Entity class
+ */
+class ProjectEntity extends Entity {
+  
+  /**
+   * Change the default URI from default/id to project/id
+   */
+  protected function defaultUri() {
+    return array('path' => 'project/' . $this->identifier());
+  }
+  
+}
