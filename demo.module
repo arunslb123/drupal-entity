@@ -31,6 +31,7 @@ function demo_entity_info() {
         ),
       ),
     ),
+    'views controller class' => 'EntityDefaultViewsController',
     'module' => 'demo',
   );
   
@@ -161,6 +162,43 @@ function project_form_submit($form, &$form_state) {
   drupal_set_message(t('The project: @name has been saved.', array('@name' => $project->name)));
   $form_state['redirect'] = 'admin/projects';
 }
+
+/**
+ * Implements hook_entity_property_info().
+ */
+function demo_entity_property_info() {
+  
+  $info = array();
+  
+  $info['project']['properties']['id'] = array(
+    'label' => t('Project ID'),
+    'description' => t('The ID of the project.'),
+    'type' => 'integer',
+    'schema field' => 'id',
+  );
+
+  $info['project']['properties']['name'] = array(
+    'label' => t('Project name'),
+    'description' => t('Name of the project.'),
+    'type' => 'text',
+    'schema field' => 'name',
+  );
+  $info['project']['properties']['description'] = array(
+    'label' => t('Project description'),
+    'description' => t('Description of the project.'),
+    'type' => 'text',
+    'schema field' => 'description',
+  );
+  $info['project']['properties']['deadline'] = array(
+    'label' => t('Deadline'),
+    'description' => t('Project deadline.'),
+    'type' => 'date',
+    'schema field' => 'deadline',
+  );
+  
+  return $info;
+}
+
 
 /**
  * Extending the EntityAPIController for the Project entity.
